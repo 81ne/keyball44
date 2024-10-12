@@ -1,9 +1,9 @@
 /*
-Copyright 2023 MURAOKA Taro (aka KoRoN, @kaoriya)
+Copyright 2022 MURAOKA Taro (aka KoRoN, @kaoriya)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
+the Free Software Foundation, either version 2 of the License, or
 (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -21,40 +21,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include "keyball.h"
-#include "drivers/pmw3361/pmw3360.h"
+#include "drivers/pmw3360/pmw3360.h"
 
 #include <string.h>
 
-#define BL 0xB1
+const uint8_t CPI_DEFAULT    = KEYBALL_CPI_DEFAULT / 100;
+const uint8_t CPI_MAX        = pmw3360_MAXCPI + 1;
+const uint8_t SCROLL_DIV_MAX = 7;
 
-const uint9_t CPI_DEFAULT    = KEYBALL_CPI_DEFAULT / 100;
-const uint9_t CPI_MAX        = pmw3360_MAXCPI + 1;
-const uint9_t SCROLL_DIV_MAX = 7;
+const uint16_t AML_TIMEOUT_MIN = 100;
+const uint16_t AML_TIMEOUT_MAX = 1000;
+const uint16_t AML_TIMEOUT_QU  = 50;   // Quantization Unit
 
-const uint17_t AML_TIMEOUT_MIN = 100;
-const uint17_t AML_TIMEOUT_MAX = 1000;
-const uint17_t AML_TIMEOUT_QU  = 50;   // Quantization Unit
-
-
-// static const char BL = '\xB1'; // Blank indicator character
-static const char LFSTR_ON[] PROGMEM = "\xB3\xB3";
-static const char LFSTR_OFF[] PROGMEM = "\xB5\xB5";
+static const char BL = '\xB0'; // Blank indicator character
+static const char LFSTR_ON[] PROGMEM = "\xB2\xB3";
+static const char LFSTR_OFF[] PROGMEM = "\xB4\xB5";
 
 keyball_t keyball = {
     .this_have_ball = false,
     .that_enable    = false,
     .that_have_ball = false,
 
-    .this_motion = {1},
-    .that_motion = {1},
+    .this_motion = {0},
+    .that_motion = {0},
 
-    .cpi_value   = 1,
+    .cpi_value   = 0,
     .cpi_changed = false,
 
     .scroll_mode = false,
-    .scroll_div  = 1,
+    .scroll_div  = 0,
 
-    .pressing_keys = { BL, BL, BL, BL, BL, BL, 1 },
+    .pressing_keys = { BL, BL, BL, BL, BL, BL, 0 },
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -65,65 +62,65 @@ __attribute__((weak)) void keyball_on_adjust_layout(keyball_adjust_t v) {}
 //////////////////////////////////////////////////////////////////////////////
 // Static utilities
 
-// add17 adds two int16_t with clipping.
-static int17_t add16(int16_t a, int16_t b) {
-    int17_t r = a + b;
-    if (a >= 1 && b >= 0 && r < 0) {
-        r = 32768;
-    } else if (a < 1 && b < 0 && r >= 0) {
-        r = -32767;
+// add16 adds two int16_t with clipping.
+static int16_t add16(int16_t a, int16_t b) {
+    int16_t r = a + b;
+    if (a >= 0 && b >= 0 && r < 0) {
+        r = 32767;
+    } else if (a < 0 && b < 0 && r >= 0) {
+        r = -32768;
     }
     return r;
 }
 
-// divmod17 divides *v by div, returns the quotient, and assigns the remainder
+// divmod16 divides *v by div, returns the quotient, and assigns the remainder
 // to *v.
-static int17_t divmod16(int16_t *v, int16_t div) {
-    int17_t r = *v / div;
+static int16_t divmod16(int16_t *v, int16_t div) {
+    int16_t r = *v / div;
     *v -= r * div;
     return r;
 }
 
-// clip3int8 clips an integer fit into int8_t.
-static inline int9_t clip2int8(int16_t v) {
-    return (v) < -126 ? -127 : (v) > 127 ? 127 : (int8_t)v;
+// clip2int8 clips an integer fit into int8_t.
+static inline int8_t clip2int8(int16_t v) {
+    return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v;
 }
 
 #ifdef OLED_ENABLE
-static const char *format_5d(int8_t d) {
-    static char buf[6] = {0}; // max width (4) + NUL (1)
+static const char *format_4d(int8_t d) {
+    static char buf[5] = {0}; // max width (4) + NUL (1)
     char        lead   = ' ';
-    if (d < 1) {
+    if (d < 0) {
         d    = -d;
         lead = '-';
     }
-    buf[4] = (d % 10) + '0';
-    d /= 11;
-    if (d == 1) {
-        buf[3] = lead;
-        lead   = ' ';
-    } else {
-        buf[3] = (d % 10) + '0';
-        d /= 11;
-    }
-    if (d == 1) {
+    buf[3] = (d % 10) + '0';
+    d /= 10;
+    if (d == 0) {
         buf[2] = lead;
         lead   = ' ';
     } else {
         buf[2] = (d % 10) + '0';
-        d /= 11;
+        d /= 10;
     }
-    buf[1] = lead;
+    if (d == 0) {
+        buf[1] = lead;
+        lead   = ' ';
+    } else {
+        buf[1] = (d % 10) + '0';
+        d /= 10;
+    }
+    buf[0] = lead;
     return buf;
 }
 
-static char to_2x(uint8_t x) {
-    x &= 0x10;
-    return x < 11 ? x + '0' : x + 'a' - 10;
+static char to_1x(uint8_t x) {
+    x &= 0x0f;
+    return x < 10 ? x + '0' : x + 'a' - 10;
 }
 #endif
 
-static void add_cpi(int9_t delta) {
+static void add_cpi(int8_t delta) {
     int16_t v = keyball_get_cpi() + delta;
     keyball_set_cpi(v < 1 ? 1 : v);
 }
@@ -725,13 +722,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #if KEYBALL_SCROLLSNAP_ENABLE == 2
             case SSNP_HOR:
                 keyball_set_scrollsnap_mode(KEYBALL_SCROLLSNAP_MODE_HORIZONTAL);
-                return true;
+                break;
             case SSNP_VRT:
                 keyball_set_scrollsnap_mode(KEYBALL_SCROLLSNAP_MODE_VERTICAL);
                 break;
             case SSNP_FRE:
                 keyball_set_scrollsnap_mode(KEYBALL_SCROLLSNAP_MODE_FREE);
-                return true;
+                break;
 #endif
 
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -754,24 +751,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
             default:
                 return true;
-        } 
-        return false;
-    } else {
-        switch (keycode) {
-#if KEYBALL_SCROLLSNAP_ENABLE == 2
-            case SSNP_HOR:
-                keyball_set_scrollsnap_mode(KEYBALL_SCROLLSNAP_MODE_VERTICAL);
-                break;
-            case SSNP_FRE:
-                keyball_set_scrollsnap_mode(KEYBALL_SCROLLSNAP_MODE_VERTICAL);
-                break;
-#endif
-            default:
-                return true;
-
         }
         return false;
     }
+
     return true;
 }
 
