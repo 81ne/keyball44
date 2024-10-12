@@ -27,19 +27,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_ESC   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_MINS   ,
     KC_TAB   , KC_A     , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_QUOT  ,
     KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_EQL  ,
-              KC_LALT,KC_LGUI,LCTL_T(KC_LNG2)     ,LT(2,KC_SPC),LT(4,KC_LNG1),                  KC_BSPC,LT(3,KC_ENT), RCTL_T(KC_LNG2),     KC_RALT  , KC_PSCR
+              KC_LALT,KC_LGUI,LCTL_T(KC_LNG2)     ,LT(2,KC_SPC),LT(4,KC_LNG1),                  KC_BSPC,LT(3,KC_ENT), RCTL_T(KC_LNG2),     KC_RALT  , TG(1)
   ),
 
   [1] = LAYOUT_universal(
     KC_ESC   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_MINS   ,
     KC_TAB   , KC_A     , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_QUOT  ,
     KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_EQL  ,
-              KC_LALT,KC_LCTL,LGUI_T(KC_F13)     ,LT(2,KC_SPC),LT(4,KC_F14),                  KC_BSPC,LT(3,KC_ENT), RCTL_T(KC_LNG2),     KC_RALT  , KC_PSCR
+              KC_LALT,KC_LCTL,LGUI_T(KC_F13)     ,LT(2,KC_SPC),LT(4,KC_F14),                  KC_BSPC,LT(3,KC_ENT), RCTL_T(KC_LNG2),     KC_RALT  , KC_TRNS
   ),
 
   [2] = LAYOUT_universal(
     _______ ,  KC_F1   , KC_F2    , KC_F3   , KC_F4    , KC_F5    ,                                         KC_F6    , KC_F7    , KC_F8    , KC_F9    , KC_F10   , KC_F11   ,
-    _______ ,  _______ , _______  , SSNP_FRE   , SSNP_HOR   , _______   ,                                         KC_BTN4  , KC_BTN1  , KC_BTN3    , KC_BTN2  , KC_BTN5  , KC_F12   ,
+    _______ ,  _______ , _______  , _______   , _______   , _______   ,                                         KC_BTN4  , KC_BTN1  , KC_BTN3    , KC_BTN2  , KC_BTN5  , KC_F12   ,
     _______ ,  CPI_D100 , CPI_D1K  , CPI_I100 , CPI_I1K  , _______  ,                                         _______  , _______  , _______  , _______  , _______  , _______  ,
                   SCRL_DVD  , SCRL_DVI , _______  ,         _______  , _______  ,                   _______  , _______  , _______       , _______  , _______
   ),
@@ -53,7 +53,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [4] = LAYOUT_universal(
     _______  , _______   , _______  , _______  , _______  , _______  ,                                        _______  , KC_7  , KC_8  , KC_9 , KC_0 , KC_BSLS  ,
-    _______  , _______  , _______  , _______  , _______  , _______ ,                                        _______  , KC_4  , KC_5 , KC_6 , KC_LBRC  , KC_RBRC  ,
+    _______  , _______  , _______  , SSNP_FRE  , SSNP_HOR  , _______ ,                                        _______  , KC_4  , KC_5 , KC_6 , KC_LBRC  , KC_RBRC  ,
     _______ , _______  , _______  , _______  , _______  , _______ ,                                        _______  , KC_1 , KC_2 , KC_3  , _______  , KC_GRV ,
                   _______  , _______  , _______  ,        _______  , _______  ,                   _______  , _______  , _______       , KBC_RST  , QK_BOOT
   ),
