@@ -40,4 +40,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define AUTO_MOUSE_DEFAULT_LAYER 2
 
 #define KEYBALL_CPI_DEFAULT 300 // マウス速度 (default: 500)
-#define KEYBALL_SCROLL_DIV_DEFAULT 3 // スクロー
+#define KEYBALL_SCROLL_DIV_DEFAULT 5
