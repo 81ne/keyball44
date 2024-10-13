@@ -758,10 +758,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #if KEYBALL_SCROLLSNAP_ENABLE == 2
             case SSNP_HOR:
                 keyball_set_scrollsnap_mode(KEYBALL_SCROLLSNAP_MODE_VERTICAL);
-                break;
+                return true;
             case SSNP_FRE:
                 keyball_set_scrollsnap_mode(KEYBALL_SCROLLSNAP_MODE_VERTICAL);
-                break;
+                return true;
 #endif
             default:
                 return true;
